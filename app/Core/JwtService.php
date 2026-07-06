@@ -6,6 +6,7 @@ namespace App\Core;
 
 use App\Config\App;
 use App\Enums\ErrorCode;
+use App\Enums\Role;
 use App\Exceptions\AppException;
 
 /**
@@ -87,12 +88,13 @@ final class JwtService
     /**
      * Generate a short-lived access token (15 min by default).
      */
-    public function generateAccessToken(int $userId, string $email): string
+    public function generateAccessToken(int $userId, string $email, Role $role): string
     {
         $payload = [
             'iss'   => 'crm-system',
             'sub'   => $userId,
             'email' => $email,
+            'role'  => $role->value,
             'type'  => 'access',
             'iat'   => time(),
             'exp'   => time() + App::ACCESS_TOKEN_TTL,

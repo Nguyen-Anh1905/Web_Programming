@@ -22,5 +22,11 @@ final class Routes
         $router->post('/auth/register', 'AuthController@register');
         $router->post('/auth/logout',   'AuthController@logout');
         $router->post('/auth/refresh',  'AuthController@refresh');
+
+        // Admin dashboard
+        $router->get('/admin/dashboard', 'AdminController@dashboard');
+
+        // Customer dashboard
+        $router->get('/customer/dashboard', 'CustomerController@dashboard');
     }
 }

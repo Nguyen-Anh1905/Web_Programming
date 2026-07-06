@@ -8,6 +8,7 @@ use App\Config\App;
 use App\Core\Controller;
 use App\Core\JwtService;
 use App\Enums\ErrorCode;
+use App\Enums\Role;
 use App\Exceptions\AppException;
 use App\Models\UserModel;
 
@@ -90,7 +91,8 @@ final class AuthController extends Controller
                 throw AppException::from(ErrorCode::INVALID_CREDENTIALS);
             }
 
-            $accessToken  = $this->jwt->generateAccessToken((int) $user['id'], $user['email']);
+            $role         = Role::tryFrom($user['role'] ?? '') ?? Role::CUSTOMER;
+            $accessToken  = $this->jwt->generateAccessToken((int) $user['id'], $user['email'], $role);
             $refreshToken = $this->jwt->generateRefreshToken((int) $user['id']);
 
             $this->userModel->storeRefreshToken(
@@ -105,10 +107,12 @@ final class AuthController extends Controller
             $this->jsonSuccess([
                 'message'      => 'Đăng nhập thành công.',
                 'access_token' => $accessToken,
+                'redirect_url' => $role->dashboardPath(),
                 'user'         => [
                     'id'    => (int) $user['id'],
                     'name'  => $user['name'],
                     'email' => $user['email'],
+                    'role'  => $role->value,
                 ],
             ]);
 
@@ -171,7 +175,8 @@ final class AuthController extends Controller
             // Rotate tokens
             $this->userModel->deleteRefreshToken($tokenHash);
 
-            $newAccessToken  = $this->jwt->generateAccessToken($userId, $user['email']);
+            $role            = Role::tryFrom($user['role'] ?? '') ?? Role::CUSTOMER;
+            $newAccessToken  = $this->jwt->generateAccessToken($userId, $user['email'], $role);
             $newRefreshToken = $this->jwt->generateRefreshToken($userId);
 
             $this->userModel->storeRefreshToken(
