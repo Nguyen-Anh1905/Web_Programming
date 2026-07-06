@@ -55,6 +55,9 @@ abstract class Controller
      */
     protected function jsonException(AppException $e): never
     {
-        $this->jsonError($e->getMessage(), $e->httpCode());
+        http_response_code($e->httpCode());
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => false, 'error_code' => $e->errorCode()->value, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 }
