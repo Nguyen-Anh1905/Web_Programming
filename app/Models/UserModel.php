@@ -63,6 +63,70 @@ final class UserModel
         return (int) $this->db->lastInsertId();
     }
 
+    /**
+     * Return all customers (role = customer), newest first.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getAllCustomers(): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT id, name, email, role, created_at FROM users
+             WHERE role = 'customer' ORDER BY created_at DESC",
+        );
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Update a user's name, email, and optionally password.
+     * Returns true if a row was actually changed.
+     */
+    public function updateCustomer(int $id, string $name, string $email, ?string $passwordHash): bool
+    {
+        if ($passwordHash !== null) {
+            $stmt = $this->db->prepare(
+                'UPDATE users SET name = :name, email = :email, password_hash = :password_hash
+                 WHERE id = :id AND role = :role',
+            );
+            $stmt->execute([
+                ':name'          => $name,
+                ':email'         => $email,
+                ':password_hash' => $passwordHash,
+                ':id'            => $id,
+                ':role'          => Role::CUSTOMER->value,
+            ]);
+        } else {
+            $stmt = $this->db->prepare(
+                'UPDATE users SET name = :name, email = :email
+                 WHERE id = :id AND role = :role',
+            );
+            $stmt->execute([
+                ':name'  => $name,
+                ':email' => $email,
+                ':id'    => $id,
+                ':role'  => Role::CUSTOMER->value,
+            ]);
+        }
+
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Delete a customer by ID (only if role = customer).
+     * Returns true if a row was deleted.
+     */
+    public function deleteCustomer(int $id): bool
+    {
+        $stmt = $this->db->prepare(
+            "DELETE FROM users WHERE id = :id AND role = 'customer'",
+        );
+        $stmt->execute([':id' => $id]);
+
+        return $stmt->rowCount() > 0;
+    }
+
     // -----------------------------------------------------------------------
     // Refresh tokens
     // -----------------------------------------------------------------------
