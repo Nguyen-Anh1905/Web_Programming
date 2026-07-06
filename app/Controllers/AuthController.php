@@ -239,6 +239,6 @@ final class AuthController extends Controller
     private function clearTokenCookies(): void
     {
         setcookie('access_token',  '', ['expires' => time() - 3600, 'path' => '/',             'httponly' => true, 'samesite' => 'Lax']);
-        setcookie('refresh_token', '', ['expires' => time() - 3600, 'path' => '/auth/refresh', 'httponly' => true, 'samesite' => 'Lax']);
+        setcookie('refresh_token', '', ['expires' => time() - 3600, 'path' => '/auth', 'httponly' => true, 'samesite' => 'Lax']);
     }
 }
