@@ -19,6 +19,16 @@ final class Router
         $this->addRoute('POST', $path, $handler);
     }
 
+    public function put(string $path, string $handler): void
+    {
+        $this->addRoute('PUT', $path, $handler);
+    }
+
+    public function delete(string $path, string $handler): void
+    {
+        $this->addRoute('DELETE', $path, $handler);
+    }
+
     public function dispatch(): void
     {
         $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
