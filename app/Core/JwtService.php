@@ -57,12 +57,16 @@ final class JwtService
         }
 
         // Decode payload
-        $payload = json_decode(
-            $this->base64UrlDecode($payloadEncoded),
-            true,
-            512,
-            JSON_THROW_ON_ERROR,
-        );
+        try {
+            $payload = json_decode(
+                $this->base64UrlDecode($payloadEncoded),
+                true,
+                512,
+                JSON_THROW_ON_ERROR,
+            );
+        } catch (\JsonException) {
+            throw AppException::from(ErrorCode::JWT_PAYLOAD_INVALID);
+        }
 
         if (!is_array($payload)) {
             throw AppException::from(ErrorCode::JWT_PAYLOAD_INVALID);
