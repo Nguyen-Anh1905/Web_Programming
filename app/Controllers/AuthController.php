@@ -229,7 +229,7 @@ final class AuthController extends Controller
     {
         setcookie('refresh_token', $token, [
             'expires'  => time() + App::REFRESH_TOKEN_TTL,
-            'path'     => '/auth/refresh',
+            'path'     => '/auth',
             'httponly' => true,
             'samesite' => 'Lax',
             // 'secure' => true, // uncomment in production (HTTPS)
