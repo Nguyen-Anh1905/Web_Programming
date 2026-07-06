@@ -73,7 +73,9 @@ document.getElementById('loginForm').addEventListener('submit', async function (
 
         if (data.success) {
             showAlert('Đăng nhập thành công! Đang chuyển hướng...', 'success');
-            setTimeout(() => { window.location.href = '/'; }, 900);
+            setTimeout(() => {
+                window.location.href = data.redirect_url || '/';
+            }, 900);
         } else {
             showAlert(data.message || 'Đăng nhập thất bại.', 'error');
         }

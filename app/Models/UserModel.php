@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Core\Database;
+use App\Enums\Role;
 use PDO;
 
 final class UserModel
@@ -37,7 +38,7 @@ final class UserModel
      */
     public function findById(int $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT id, name, email, created_at FROM users WHERE id = :id LIMIT 1');
+        $stmt = $this->db->prepare('SELECT id, name, email, role, created_at FROM users WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch();
 
@@ -47,14 +48,15 @@ final class UserModel
     /**
      * Insert a new user and return the new auto-increment ID.
      */
-    public function create(string $name, string $email, string $passwordHash): int
+    public function create(string $name, string $email, string $passwordHash, Role $role = Role::CUSTOMER): int
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO users (name, email, password_hash) VALUES (:name, :email, :password_hash)',
+            'INSERT INTO users (name, email, role, password_hash) VALUES (:name, :email, :role, :password_hash)',
         );
         $stmt->execute([
             ':name'          => $name,
             ':email'         => $email,
+            ':role'          => $role->value,
             ':password_hash' => $passwordHash,
         ]);
 

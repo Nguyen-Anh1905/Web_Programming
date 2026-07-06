@@ -45,6 +45,10 @@ enum ErrorCode: string
     // ── Resources ────────────────────────────────────────────────────────────
     case USER_NOT_FOUND              = 'USER_NOT_FOUND';
 
+    // ── RBAC ──────────────────────────────────────────────────────────────────
+    case FORBIDDEN                   = 'FORBIDDEN';
+    case ROLE_INVALID                = 'ROLE_INVALID';
+
     // ── Server ───────────────────────────────────────────────────────────────
     case INTERNAL_ERROR              = 'INTERNAL_ERROR';
     case DB_CONNECTION_FAILED        = 'DB_CONNECTION_FAILED';
@@ -87,6 +91,10 @@ enum ErrorCode: string
             // Resources
             self::USER_NOT_FOUND           => 'Người dùng không tồn tại.',
 
+            // RBAC
+            self::FORBIDDEN                => 'Bạn không có quyền truy cập tài nguyên này.',
+            self::ROLE_INVALID             => 'Role không hợp lệ.',
+
             // Server
             self::INTERNAL_ERROR           => 'Lỗi máy chủ nội bộ.',
             self::DB_CONNECTION_FAILED     => 'Không thể kết nối cơ sở dữ liệu.',
@@ -119,6 +127,9 @@ enum ErrorCode: string
             self::JWT_EXPIRED               => 401,
 
             self::USER_NOT_FOUND            => 404,
+
+            self::FORBIDDEN                 => 403,
+            self::ROLE_INVALID              => 400,
 
             self::JWT_SECRET_NOT_SET,
             self::INTERNAL_ERROR,
