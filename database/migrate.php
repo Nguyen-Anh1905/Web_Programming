@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 /**
  * Database Migration Runner
- * 
+ *
+ * Tracks applied migrations in a `migrations` table — safe to run
+ * on any machine, any number of times. Already-applied files are skipped.
+ *
  * Usage:
- *   php database/migrate.php
- *   php database/migrate.php --fresh    (drop & re-create all tables)
+ *   php database/migrate.php             # run pending migrations only
+ *   php database/migrate.php --fresh     # drop all tables & re-run everything
+ *   php database/migrate.php --status    # show applied / pending list
  */
 
 define('BASE_PATH', dirname(__DIR__));
@@ -36,13 +40,14 @@ function env(string $key, string $default = ''): string
 
 // ── Connect ───────────────────────────────────────────────────────────────────
 
-$host     = env('DB_HOST', '127.0.0.1');
-$port     = env('DB_PORT', '3306');
-$dbName   = env('DB_NAME', 'crm_system');
-$user     = env('DB_USER', 'root');
+$host = env('DB_HOST', '127.0.0.1');
+$port = env('DB_PORT', '3306');
+$dbName = env('DB_NAME', 'crm_system');
+$user = env('DB_USER', 'root');
 $password = env('DB_PASSWORD', '');
 
-$isFresh = in_array('--fresh', $argv ?? [], true);
+$isFresh  = in_array('--fresh',  $argv ?? [], true);
+$isStatus = in_array('--status', $argv ?? [], true);
 
 echo "\n=== CRM System — Migration Runner ===\n\n";
 echo "  Host     : $host:$port\n";
@@ -81,6 +86,17 @@ try {
         echo "\n";
     }
 
+    // Create the migration-tracking table if it doesn't exist yet
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `migrations` (
+            `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            `filename`   VARCHAR(255) NOT NULL,
+            `applied_at` TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `migrations_filename_unique` (`filename`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
 } catch (PDOException $e) {
     exit("[ERROR] Cannot connect to MySQL: " . $e->getMessage() . "\n");
 }
@@ -88,7 +104,7 @@ try {
 // ── Run migrations ────────────────────────────────────────────────────────────
 
 $migrationDir = __DIR__ . '/migrations';
-$files        = glob($migrationDir . '/*.sql');
+$files = glob($migrationDir . '/*.sql');
 
 if (empty($files)) {
     exit("[WARN] No migration files found in database/migrations/\n");
@@ -96,12 +112,37 @@ if (empty($files)) {
 
 sort($files); // run in filename order (001, 002, ...)
 
+// Load already-applied filenames into a hash-set for O(1) lookup
+$applied = array_flip(
+    $pdo->query('SELECT filename FROM migrations')->fetchAll(PDO::FETCH_COLUMN)
+);
+
+// --status: just print the list and exit
+if ($isStatus) {
+    echo "Migration status:\n\n";
+    foreach ($files as $file) {
+        $name = basename($file);
+        $mark = isset($applied[$name]) ? '\u{2713} applied' : '○ pending';
+        echo "  $mark  $name\n";
+    }
+    echo "\n";
+    exit(0);
+}
+
 $ran     = 0;
 $skipped = 0;
 
 foreach ($files as $file) {
     $filename = basename($file);
-    $sql      = file_get_contents($file);
+
+    // Skip files already recorded in the migrations table
+    if (isset($applied[$filename])) {
+        echo "[SKIP] $filename (already applied)\n";
+        $skipped++;
+        continue;
+    }
+
+    $sql = file_get_contents($file);
 
     if ($sql === false || trim($sql) === '') {
         echo "[SKIP] $filename (empty file)\n";
@@ -112,7 +153,7 @@ foreach ($files as $file) {
     try {
         // Remove single-line comments before executing
         $cleanSql = preg_replace('/--[^\n]*/', '', $sql);
-        
+
         // Split on semicolons and execute each statement
         $statements = array_filter(
             array_map('trim', explode(';', $cleanSql)),
@@ -122,6 +163,10 @@ foreach ($files as $file) {
         foreach ($statements as $stmt) {
             $pdo->exec($stmt);
         }
+
+        // Record this migration as applied
+        $pdo->prepare('INSERT INTO migrations (filename) VALUES (:f)')
+            ->execute([':f' => $filename]);
 
         echo "[OK] $filename\n";
         $ran++;

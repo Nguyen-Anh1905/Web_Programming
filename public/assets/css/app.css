@@ -1,66 +1,467 @@
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
+/* ═══════════════════════════════════════════════════════════════════
+   CRM System — Global Theme (Light)
+   3-colour rule: #ffffff (white) · #111827 (black/text) · #4f46e5 (indigo)
+   Font: Inter (sans-serif, không chân)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── CSS Variables ─────────────────────────────────────────────────── */
+:root {
+    --crm-bg: #f0f2f5;
+    /* page background – off-white */
+    --crm-surface: #ffffff;
+    /* card / sidebar background   */
+    --crm-surface-2: #f8f9fb;
+    /* input / subtle surface      */
+    --crm-border: #e4e7ec;
+    /* dividers & borders          */
+    --crm-accent: #4f46e5;
+    /* indigo – primary action     */
+    --crm-accent-h: #4338ca;
+    /* indigo hover                */
+    --crm-text: #111827;
+    /* near-black body text        */
+    --crm-muted: #6b7280;
+    /* secondary / placeholder     */
+    --crm-sidebar-w: 220px;
 }
 
+/* ── Base ──────────────────────────────────────────────────────────── */
 body {
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    background: #f4f6f8;
-    color: #1f2933;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--crm-bg);
+    color: var(--crm-text);
 }
 
-.container {
+/* ── Bootstrap primary colour override ─────────────────────────────── */
+.btn-primary {
+    background-color: var(--crm-accent) !important;
+    border-color: var(--crm-accent) !important;
+    color: #fff !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--crm-accent-h) !important;
+    border-color: var(--crm-accent-h) !important;
+}
+
+.btn-outline-primary {
+    color: var(--crm-accent) !important;
+    border-color: var(--crm-accent) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--crm-accent) !important;
+    color: #fff !important;
+}
+
+/* ── Form controls ──────────────────────────────────────────────────── */
+.form-control,
+.form-select {
+    background-color: var(--crm-surface-2);
+    border-color: var(--crm-border);
+    color: var(--crm-text);
+}
+
+.form-control::placeholder {
+    color: var(--crm-muted);
+    opacity: 1;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: #fff;
+    border-color: var(--crm-accent);
+    color: var(--crm-text);
+    box-shadow: 0 0 0 .2rem rgba(79, 70, 229, .18);
+}
+
+.form-text {
+    color: var(--crm-muted);
+}
+
+.form-label {
+    color: var(--crm-text);
+}
+
+/* ── Sidebar ────────────────────────────────────────────────────────── */
+.crm-sidebar {
+    width: var(--crm-sidebar-w);
+    background: var(--crm-surface);
+    border-right: 1px solid var(--crm-border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1030;
+    overflow-y: auto;
+    box-shadow: 1px 0 0 var(--crm-border);
+}
+
+.crm-sidebar .nav-link {
+    color: var(--crm-muted);
+    border-radius: 6px;
+    padding: .45rem .75rem;
+    font-size: .85rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    transition: background .15s, color .15s;
+}
+
+.crm-sidebar .nav-link .nav-icon {
+    font-size: .95rem;
+    width: 1.1rem;
+    text-align: center;
+}
+
+.crm-sidebar .nav-link:hover {
+    background: var(--crm-surface-2);
+    color: var(--crm-text);
+}
+
+.crm-sidebar .nav-link.active {
+    background: rgba(79, 70, 229, .08);
+    color: var(--crm-accent);
+}
+
+/* ── Main content area ──────────────────────────────────────────────── */
+.crm-main {
+    margin-left: var(--crm-sidebar-w);
+    min-height: 100vh;
+    min-width: 0;
+    /* cho phép flex child co lại */
+    overflow-x: hidden;
+    /* chặn thanh cuộn ngang */
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Topbar ─────────────────────────────────────────────────────────── */
+.crm-topbar {
+    height: 56px;
+    background: var(--crm-surface);
+    border-bottom: 1px solid var(--crm-border);
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    gap: .75rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+}
+
+/* ── Card ───────────────────────────────────────────────────────────── */
+.card {
+    background: var(--crm-surface);
+    border-color: var(--crm-border);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+}
+
+/* ── Table ──────────────────────────────────────────────────────────── */
+.table {
+    color: var(--crm-text);
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background: var(--crm-surface-2);
+    border-color: var(--crm-border);
+    color: var(--crm-muted);
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-weight: 600;
+    padding: .75rem 1rem;
+    white-space: nowrap;
+}
+
+.table tbody tr {
+    height: 52px;
+    /* ← chiều cao cố định mỗi hàng */
+}
+
+.table tbody td {
+    border-color: var(--crm-border);
+    vertical-align: middle;
+    padding: 0 1rem;
+    /* bỏ padding top/bottom, height tr đã giữ */
+    background: var(--crm-surface);
+    color: var(--crm-text);
+    white-space: nowrap;
+    /* ngăn xuống hàng */
+    overflow: hidden;
+    max-width: 200px;
+    text-overflow: ellipsis;
+}
+
+/* Cột Họ tên có avatar — cho phép rộng hơn một chút */
+.table tbody td:nth-child(2) {
+    max-width: 220px;
+}
+
+/* Cột Thao tác — không cắt nút */
+.table tbody td:last-child {
+    overflow: visible;
+    white-space: nowrap;
+    max-width: none;
+}
+
+.table tbody tr:hover td {
+    background: var(--crm-surface-2);
+}
+
+
+/* ── Modal ──────────────────────────────────────────────────────────── */
+.modal-content {
+    background: var(--crm-surface);
+    border-color: var(--crm-border);
+}
+
+.modal-header,
+.modal-footer {
+    border-color: var(--crm-border);
+}
+
+.modal-title {
+    color: var(--crm-text);
+}
+
+/* ── Tier badges ─────────────────────────────────────────────────────── */
+.tier-badge {
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .25rem .6rem;
+    border-radius: 999px;
+    border: 1px solid;
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    white-space: nowrap;
+}
+
+.tier-dong {
+    color: #b45309;
+    background: rgba(180, 83, 9, .08);
+    border-color: rgba(180, 83, 9, .25);
+}
+
+.tier-bac {
+    color: #4b5563;
+    background: rgba(75, 85, 99, .08);
+    border-color: rgba(75, 85, 99, .25);
+}
+
+.tier-vang {
+    color: #b45309;
+    background: rgba(245, 158, 11, .1);
+    border-color: rgba(245, 158, 11, .3);
+}
+
+.tier-vip {
+    color: #6d28d9;
+    background: rgba(109, 40, 217, .08);
+    border-color: rgba(109, 40, 217, .3);
+}
+
+/* ── Sortable column headers ────────────────────────────────────────── */
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.sortable:hover {
+    color: var(--crm-text) !important;
+}
+
+.sort-icon {
+    opacity: .35;
+    font-size: .65rem;
+    margin-left: .25rem;
+    font-style: normal;
+}
+
+.sort-asc .sort-icon,
+.sort-desc .sort-icon {
+    opacity: 1;
+    color: var(--crm-accent);
+}
+
+/* ── Autocomplete suggestion dropdown ──────────────────────────────── */
+.search-wrap {
+    position: relative;
+}
+
+#suggestions {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--crm-surface);
+    border: 1px solid var(--crm-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+    z-index: 500;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#suggestions.open {
+    display: block;
+}
+
+.sug-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .5rem .875rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--crm-border);
+    transition: background .12s;
+}
+
+.sug-item:last-child {
+    border-bottom: none;
+}
+
+.sug-item:hover,
+.sug-item.sug-active {
+    background: rgba(79, 70, 229, .06);
+}
+
+.sug-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--crm-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .7rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.sug-name {
+    font-size: .8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--crm-text);
+}
+
+.sug-sub {
+    font-size: .6875rem;
+    color: var(--crm-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sug-name mark,
+.sug-sub mark {
+    background: rgba(79, 70, 229, .15);
+    color: var(--crm-accent);
+    border-radius: 2px;
+    padding: 0 2px;
+    font-style: normal;
+}
+
+.sug-empty {
+    padding: .75rem .875rem;
+    text-align: center;
+    color: var(--crm-muted);
+    font-size: .8125rem;
+}
+
+/* ── Pagination ─────────────────────────────────────────────────────── */
+.page-link {
+    background-color: var(--crm-surface);
+    border-color: var(--crm-border);
+    color: var(--crm-muted);
+}
+
+.page-link:hover {
+    background-color: var(--crm-accent);
+    border-color: var(--crm-accent);
+    color: #fff;
+}
+
+.page-item.active .page-link {
+    background-color: var(--crm-accent);
+    border-color: var(--crm-accent);
+    color: #fff;
+}
+
+.page-item.disabled .page-link {
+    background-color: var(--crm-surface-2);
+    border-color: var(--crm-border);
+    color: #ccc;
+}
+
+/* ── Auth pages ─────────────────────────────────────────────────────── */
+.auth-wrapper {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: 1rem;
+    background: var(--crm-bg);
 }
 
-.card {
+.auth-card {
     width: 100%;
-    max-width: 640px;
-    background: #ffffff;
-    border: 1px solid #d9e2ec;
-    border-radius: 12px;
-    padding: 32px;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    max-width: 420px;
 }
 
-.card h1 {
-    margin-top: 0;
-    margin-bottom: 12px;
-    font-size: 28px;
+.auth-logo-icon {
+    width: 38px;
+    height: 38px;
+    background: var(--crm-accent);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
 }
 
-.hint {
-    color: #627d98;
-    font-size: 14px;
+/* ── Toast ──────────────────────────────────────────────────────────── */
+.toast {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
 }
 
-.error-card {
-    text-align: center;
-}
-
+/* ── 404 ─────────────────────────────────────────────────────────────── */
 .error-code {
-    margin: 0 0 8px;
-    font-size: 56px;
-    font-weight: 700;
-    color: #d64545;
+    font-size: 6rem;
+    font-weight: 800;
+    color: var(--crm-accent);
+    line-height: 1;
 }
 
-.btn {
-    display: inline-block;
-    margin-top: 20px;
-    padding: 10px 18px;
-    border-radius: 8px;
-    background: #2563eb;
-    color: #ffffff;
-    text-decoration: none;
-}
+/* ── Responsive sidebar ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .crm-sidebar {
+        transform: translateX(-100%);
+        transition: transform .3s;
+    }
 
-.btn:hover {
-    background: #1d4ed8;
+    .crm-sidebar.show {
+        transform: none;
+    }
+
+    .crm-main {
+        margin-left: 0;
+    }
+
+    .crm-topbar {
+        padding: 0 1rem;
+    }
 }

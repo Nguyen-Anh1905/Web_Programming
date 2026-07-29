@@ -14,13 +14,13 @@ use App\Models\UserModel;
 
 final class AuthController extends Controller
 {
-    private UserModel  $userModel;
+    private UserModel $userModel;
     private JwtService $jwt;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
-        $this->jwt       = new JwtService();
+        $this->jwt = new JwtService();
     }
 
     // -----------------------------------------------------------------------
@@ -48,8 +48,8 @@ final class AuthController extends Controller
     public function register(): void
     {
         try {
-            $name     = trim($_POST['name']     ?? '');
-            $email    = trim($_POST['email']    ?? '');
+            $name = trim($_POST['name'] ?? '');
+            $email = trim($_POST['email'] ?? '');
             $password = trim($_POST['password'] ?? '');
 
             $this->validateRegistration($name, $email, $password);
@@ -58,12 +58,12 @@ final class AuthController extends Controller
                 throw AppException::from(ErrorCode::EMAIL_ALREADY_EXISTS);
             }
 
-            $hash   = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+            $hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
             $userId = $this->userModel->create($name, $email, $hash);
 
             $this->jsonSuccess([
                 'message' => 'Đăng ký thành công.',
-                'user'    => ['id' => $userId, 'name' => $name, 'email' => $email],
+                'user' => ['id' => $userId, 'name' => $name, 'email' => $email],
             ], 201);
 
         } catch (AppException $e) {
@@ -78,7 +78,7 @@ final class AuthController extends Controller
     public function login(): void
     {
         try {
-            $email    = trim($_POST['email']    ?? '');
+            $email = trim($_POST['email'] ?? '');
             $password = trim($_POST['password'] ?? '');
 
             if ($email === '' || $password === '') {
@@ -91,8 +91,8 @@ final class AuthController extends Controller
                 throw AppException::from(ErrorCode::INVALID_CREDENTIALS);
             }
 
-            $role         = Role::tryFrom($user['role'] ?? '') ?? Role::CUSTOMER;
-            $accessToken  = $this->jwt->generateAccessToken((int) $user['id'], $user['email'], $role);
+            $role = Role::tryFrom($user['role'] ?? '') ?? Role::CUSTOMER;
+            $accessToken = $this->jwt->generateAccessToken((int) $user['id'], $user['email'], $role);
             $refreshToken = $this->jwt->generateRefreshToken((int) $user['id']);
 
             $this->userModel->storeRefreshToken(
@@ -105,14 +105,14 @@ final class AuthController extends Controller
             $this->setRefreshTokenCookie($refreshToken);
 
             $this->jsonSuccess([
-                'message'      => 'Đăng nhập thành công.',
+                'message' => 'Đăng nhập thành công.',
                 'access_token' => $accessToken,
                 'redirect_url' => $role->dashboardPath(),
-                'user'         => [
-                    'id'    => (int) $user['id'],
-                    'name'  => $user['name'],
+                'user' => [
+                    'id' => (int) $user['id'],
+                    'name' => $user['name'],
                     'email' => $user['email'],
-                    'role'  => $role->value,
+                    'role' => $role->value,
                 ],
             ]);
 
@@ -159,14 +159,14 @@ final class AuthController extends Controller
             }
 
             $tokenHash = hash('sha256', $refreshToken);
-            $stored    = $this->userModel->findRefreshToken($tokenHash);
+            $stored = $this->userModel->findRefreshToken($tokenHash);
 
             if ($stored === null) {
                 throw AppException::from(ErrorCode::REFRESH_TOKEN_REVOKED);
             }
 
             $userId = (int) $payload['sub'];
-            $user   = $this->userModel->findById($userId);
+            $user = $this->userModel->findById($userId);
 
             if ($user === null) {
                 throw AppException::from(ErrorCode::USER_NOT_FOUND);
@@ -175,8 +175,8 @@ final class AuthController extends Controller
             // Rotate tokens
             $this->userModel->deleteRefreshToken($tokenHash);
 
-            $role            = Role::tryFrom($user['role'] ?? '') ?? Role::CUSTOMER;
-            $newAccessToken  = $this->jwt->generateAccessToken($userId, $user['email'], $role);
+            $role = Role::tryFrom($user['role'] ?? '') ?? Role::CUSTOMER;
+            $newAccessToken = $this->jwt->generateAccessToken($userId, $user['email'], $role);
             $newRefreshToken = $this->jwt->generateRefreshToken($userId);
 
             $this->userModel->storeRefreshToken(
@@ -189,7 +189,7 @@ final class AuthController extends Controller
             $this->setRefreshTokenCookie($newRefreshToken);
 
             $this->jsonSuccess([
-                'message'      => 'Token đã được làm mới.',
+                'message' => 'Token đã được làm mới.',
                 'access_token' => $newAccessToken,
             ]);
 
@@ -222,8 +222,8 @@ final class AuthController extends Controller
     private function setAccessTokenCookie(string $token): void
     {
         setcookie('access_token', $token, [
-            'expires'  => time() + App::ACCESS_TOKEN_TTL,
-            'path'     => '/',
+            'expires' => time() + App::ACCESS_TOKEN_TTL,
+            'path' => '/',
             'httponly' => true,
             'samesite' => 'Lax',
             // 'secure' => true, // uncomment in production (HTTPS)
@@ -233,8 +233,8 @@ final class AuthController extends Controller
     private function setRefreshTokenCookie(string $token): void
     {
         setcookie('refresh_token', $token, [
-            'expires'  => time() + App::REFRESH_TOKEN_TTL,
-            'path'     => '/auth',
+            'expires' => time() + App::REFRESH_TOKEN_TTL,
+            'path' => '/auth',
             'httponly' => true,
             'samesite' => 'Lax',
             // 'secure' => true, // uncomment in production (HTTPS)
@@ -243,7 +243,7 @@ final class AuthController extends Controller
 
     private function clearTokenCookies(): void
     {
-        setcookie('access_token',  '', ['expires' => time() - 3600, 'path' => '/',             'httponly' => true, 'samesite' => 'Lax']);
+        setcookie('access_token', '', ['expires' => time() - 3600, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
         setcookie('refresh_token', '', ['expires' => time() - 3600, 'path' => '/auth', 'httponly' => true, 'samesite' => 'Lax']);
     }
 }

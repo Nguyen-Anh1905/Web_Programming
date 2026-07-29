@@ -9,6 +9,7 @@ use App\Core\Middleware\RoleMiddleware;
 use App\Enums\ErrorCode;
 use App\Enums\Role;
 use App\Exceptions\AppException;
+use App\Models\BookingModel;
 use App\Models\UserModel;
 
 final class AdminController extends Controller
@@ -29,8 +30,9 @@ final class AdminController extends Controller
         $payload = RoleMiddleware::handle(Role::ADMIN);
 
         $this->view('admin/dashboard', [
-            'title'   => 'Quản lý Khách hàng',
+            'title' => 'Quản lý Khách hàng',
             'payload' => $payload,
+            'pageScript' => '/assets/js/admin-customers.js',
         ], 'dashboard');
     }
 
@@ -42,10 +44,31 @@ final class AdminController extends Controller
     {
         RoleMiddleware::handle(Role::ADMIN);
 
-        $customers = $this->userModel->getAllCustomers();
+        // ── Parse query parameters ──────────────────────────────────────────
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+        $limit = max(1, min(100, (int) ($_GET['limit'] ?? 10)));
+        $sortCol = trim($_GET['sort'] ?? 'created_at');
+        $sortDir = trim($_GET['order'] ?? 'desc');
+        $keyword = trim($_GET['q'] ?? '') ?: null;
 
-        $this->jsonSuccess(['customers' => $customers]);
+        $offset = ($page - 1) * $limit;
+
+        // ── Fetch from Model ────────────────────────────────────────────────
+        $customers = $this->userModel->getCustomersPaginated($limit, $offset, $sortCol, $sortDir, $keyword);
+        $totalItems = $this->userModel->countAllCustomers($keyword);
+        $totalPages = (int) ceil($totalItems / $limit);
+
+        $this->jsonSuccess([
+            'customers' => $customers,
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $limit,
+                'total_items' => $totalItems,
+                'total_pages' => max(1, $totalPages),
+            ],
+        ]);
     }
+
 
     // -----------------------------------------------------------------------
     // POST /admin/customers – create a new customer
@@ -56,10 +79,15 @@ final class AdminController extends Controller
         try {
             RoleMiddleware::handle(Role::ADMIN);
 
-            $body     = $this->parseBody();
-            $name     = trim($body['name']     ?? '');
-            $email    = trim($body['email']    ?? '');
+            $body = $this->parseBody();
+            $name = trim($body['name'] ?? '');
+            $email = trim($body['email'] ?? '');
             $password = trim($body['password'] ?? '');
+            $phone = trim($body['phone'] ?? '');
+            $address = trim($body['address'] ?? '');
+            $dob = trim($body['dob'] ?? '');
+            $gender = trim($body['gender'] ?? '');
+            $memberPoints = (int) ($body['member_points'] ?? 0);
 
             if ($name === '') {
                 throw AppException::from(ErrorCode::NAME_REQUIRED);
@@ -74,11 +102,21 @@ final class AdminController extends Controller
                 throw AppException::from(ErrorCode::EMAIL_ALREADY_EXISTS);
             }
 
-            $hash   = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
-            $userId = $this->userModel->create($name, $email, $hash, Role::CUSTOMER);
+            $hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+            $userId = $this->userModel->create(
+                $name,
+                $email,
+                $hash,
+                Role::CUSTOMER,
+                $phone,
+                $address,
+                $dob,
+                $gender,
+                $memberPoints,
+            );
 
             $this->jsonSuccess([
-                'message'  => 'Tạo khách hàng thành công.',
+                'message' => 'Tạo khách hàng thành công.',
                 'customer' => ['id' => $userId, 'name' => $name, 'email' => $email, 'role' => 'customer'],
             ], 201);
 
@@ -101,10 +139,15 @@ final class AdminController extends Controller
                 throw AppException::from(ErrorCode::USER_NOT_FOUND);
             }
 
-            $body  = $this->parseBody();
-            $name  = trim($body['name']  ?? '');
+            $body = $this->parseBody();
+            $name = trim($body['name'] ?? '');
             $email = trim($body['email'] ?? '');
-            $pass  = trim($body['password'] ?? '');
+            $pass = trim($body['password'] ?? '');
+            $phone = trim($body['phone'] ?? '');
+            $address = trim($body['address'] ?? '');
+            $dob = trim($body['dob'] ?? '');
+            $gender = trim($body['gender'] ?? '');
+            $memberPoints = (int) ($body['member_points'] ?? 0);
 
             if ($name === '') {
                 throw AppException::from(ErrorCode::NAME_REQUIRED);
@@ -122,8 +165,18 @@ final class AdminController extends Controller
                 throw AppException::from(ErrorCode::EMAIL_ALREADY_EXISTS);
             }
 
-            $hash    = $pass !== '' ? password_hash($pass, PASSWORD_BCRYPT, ['cost' => 12]) : null;
-            $updated = $this->userModel->updateCustomer($customerId, $name, $email, $hash);
+            $hash = $pass !== '' ? password_hash($pass, PASSWORD_BCRYPT, ['cost' => 12]) : null;
+            $updated = $this->userModel->updateCustomer(
+                $customerId,
+                $name,
+                $email,
+                $hash,
+                $phone,
+                $address,
+                $dob,
+                $gender,
+                $memberPoints,
+            );
 
             if (!$updated) {
                 throw AppException::from(ErrorCode::USER_NOT_FOUND);
@@ -179,5 +232,18 @@ final class AdminController extends Controller
         // PUT/DELETE via fetch with URLSearchParams sends application/x-www-form-urlencoded
         parse_str(file_get_contents('php://input') ?: '', $parsed);
         return array_merge($_POST, $parsed);
+    }
+
+    // -----------------------------------------------------------------------
+    // GET /admin/customers/{id}/bookings
+    // -----------------------------------------------------------------------
+    // GET /admin/customers/{id}/bookings
+    // -----------------------------------------------------------------------
+
+    public function getCustomerBookings(int $id): void
+    {
+        RoleMiddleware::handle(Role::ADMIN);
+        $bookings = (new BookingModel())->getByUserId($id);
+        $this->jsonSuccess(['bookings' => $bookings]);
     }
 }
